@@ -23,8 +23,25 @@ def extract_train_test_path(meta_file: str, filename: str, target: str):
             fn = emotion_item[filename]
             path = os.path.join(PREFIX, actor, fn + SUFFIX)
             emotion_list.append(path)
-        emotion_train, emotion_test = train_test_split(emotion_list, test_size=0.2, shuffle=True)
+        emotion_train, emotion_test = train_test_split(emotion_list, test_size=0.2, shuffle=True, random_state=42)
         train_files.extend(emotion_train)
         test_files.extend(emotion_test)
 
     return train_files, test_files
+
+
+def get_frame_length(file):
+    with open(file, "r") as fp:
+        searchlines = fp.readlines()
+    for i, line in enumerate(searchlines):
+        if "Frames:" in line:
+            length = int(line.rstrip('\n').split(':')[1])
+            return length
+
+def find_maximum_frame_length(files):
+    max_len = 0
+    for file in files:
+        file_len = get_frame_length(file)
+        if file_len > max_len:
+            max_len = file_len
+    return max_len
