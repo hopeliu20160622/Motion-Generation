@@ -43,6 +43,7 @@ def joi_to_colnames(joi: List):
 
 def euler_to_quaternion(euler):
     """Convert euler(N, 3) representation to quaternion(N, 4) representation"""
+    # https://forums.autodesk.com/t5/fbx-forum/eulerangles-quaternions-and-the-right-rotationorder/m-p/4166206/highlight/true#M3108
     euler_vals = torch.Tensor(euler)
     matrix = euler_angles_to_matrix(euler_vals, convention='XYZ')
     quaternion_vals = matrix_to_quaternion(matrix)
@@ -50,6 +51,7 @@ def euler_to_quaternion(euler):
 
 def euler_to_6d(euler):
     """Convert euler(N, 3) representation to 6d(N, 6) representation"""
+    # https://forums.autodesk.com/t5/fbx-forum/eulerangles-quaternions-and-the-right-rotationorder/m-p/4166206/highlight/true#M3108
     euler_vals = torch.Tensor(euler)
     matrix = euler_angles_to_matrix(euler_vals, convention='XYZ')
     rot6d_vals = matrix_to_rotation_6d(matrix)

@@ -41,8 +41,6 @@ def test_joi_validity(ext_train_test_files):
 
 def test_euler_to_matrix():
     test_hips_rot = torch.Tensor([1.755432, -11.232321, -0.278222])
-    # https://forums.autodesk.com/t5/fbx-forum/eulerangles-quaternions-and-the-right-rotationorder/m-p/4166206/highlight/true#M3108
-
     mat = euler_angles_to_matrix(euler_angles=test_hips_rot, convention='XYZ')
     rot_6d = matrix_to_quaternion(mat)
 
