@@ -24,9 +24,8 @@ def test_find_maximum_frame_length(ext_train_test_files):
     test_max = find_maximum_frame_length(ext_train_test_files[1])
     assert test_max == 1922
 
-# def test_preprocessor(ext_train_test_files):
-#     train_files, test_files = ext_train_test_files[0], ext_train_test_files[1]
-
-#     preprocessor = Preprocessor(test_files, 1400)
-#     preprocessor.process()
-#     print("Done")
+def test_preprocessor(ext_train_test_files):
+    train_files, test_files = ext_train_test_files[0], ext_train_test_files[1]
+    preprocessor = Preprocessor(test_files, 1922)
+    preprocessor.process()
+    print("Done")
