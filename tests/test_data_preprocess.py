@@ -54,8 +54,8 @@ def test_preprocess_bvh_quaternion(ext_train_test_files):
     assert pos_mat.shape[1]/3 == rot_mat.shape[1]/4
     
 def test_preprocess_bvh_6d(ext_train_test_files):
-    _, test_files = ext_train_test_files[0], ext_train_test_files[1]
-    preprocessor = Preprocessor(test_files[0], rot_format='6d')
+    _, test_files = ext_train_test_files[1], ext_train_test_files[1]
+    preprocessor = Preprocessor(test_files[1], rot_format='6d')
     pos_mat, rot_mat = preprocessor.process()
     assert pos_mat.shape[0] == rot_mat.shape[0]
     assert pos_mat.shape[1]/3 == rot_mat.shape[1]/6
