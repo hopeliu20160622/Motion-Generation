@@ -1,10 +1,17 @@
+import os
+
+import numpy as np
 import pandas as pd
-from mg.data.util import extract_train_test_path, get_frame_length, find_maximum_frame_length, joi, joi_to_colnames
-from mg.data.preprocess import Preprocessor
 import pytest
-from pymo.parsers import BVHParser
-from pytorch3d.transforms import euler_angles_to_matrix, matrix_to_euler_angles, matrix_to_rotation_6d, matrix_to_quaternion
 import torch
+from mg.data.preprocess import Preprocessor
+from mg.data.util import (extract_train_test_path, find_maximum_frame_length,
+                          get_frame_length, joi, joi_to_colnames)
+from pymo.parsers import BVHParser
+from pytorch3d.transforms import (euler_angles_to_matrix,
+                                  matrix_to_euler_angles, matrix_to_quaternion,
+                                  matrix_to_rotation_6d)
+
 
 @pytest.fixture
 def ext_train_test_files():
@@ -57,3 +64,16 @@ def test_preprocess_bvh_6d(ext_train_test_files):
     pos_mat, rot_mat = preprocessor.process()
     assert pos_mat.shape[0] == rot_mat.shape[0]
     assert pos_mat.shape[1]/3 == rot_mat.shape[1]/6
+
+def test_npz_validity():
+    path = os.path.join('npz_data', 'quaternion')
+    if not os.listdir(path):
+        pass
+    npz_files = os.listdir(path)
+
+    for i in npz_files[:20]:
+        npz_quat = np.load(os.path.join(path, i))
+        pos = npz_quat['pos']
+        rot = npz_quat['rot']
+        assert pos.shape[0] == rot.shape[0]
+        assert pos.shape[1]/3 == rot.shape[1]/4
