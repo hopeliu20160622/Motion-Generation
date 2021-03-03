@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 import torch
 from mg.data.preprocess import Preprocessor
-from mg.data.util import (extract_train_test_path, find_maximum_frame_length,
+from mg.data.util import (extract_train_test_path, find_maximum_frame_length, make_seq_list,
                           get_frame_length, joi, joi_to_colnames)
 from pymo.parsers import BVHParser
 from pytorch3d.transforms import (euler_angles_to_matrix,
@@ -77,3 +77,18 @@ def test_npz_validity():
         rot = npz_quat['rot']
         assert pos.shape[0] == rot.shape[0]
         assert pos.shape[1]/3 == rot.shape[1]/4
+
+@pytest.fixture
+def test_make_batch():
+    files = ['npz_data/quaternion/F01A0V1.npz', 'npz_data/quaternion/M11SU0V1.npz', 'npz_data/quaternion/M11SU4V1.npz',
+              'npz_data/quaternion/M11H2V1.npz', 'npz_data/quaternion/M11D3V1.npz']
+    mats = make_seq_list(files)
+    assert len(mats) == 5
+    return mats
+
+def test_sort_batch(test_make_batch):
+    mats = test_make_batch
+    seq_lengths = [mat.shape[0] for mat in mats]
+    sorted_mats = sorted(mats, key=lambda x: x.shape[0], reverse=True)
+    assert sorted_mats[0].shape[0] == np.max(seq_lengths) # maximum
+    assert sorted_mats[-1].shape[0] == np.min(seq_lengths) # minimum
