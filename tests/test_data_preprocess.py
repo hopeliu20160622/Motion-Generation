@@ -5,7 +5,7 @@ import pandas as pd
 import pytest
 import torch
 from mg.data.preprocess import Preprocessor
-from mg.data.util import (extract_train_test_path, find_maximum_frame_length, make_seq_list,
+from mg.data.util import (extract_train_test_path, find_maximum_frame_length, make_seq_list, split_seq_train_test,
                           get_frame_length, joi, joi_to_colnames)
 from pymo.parsers import BVHParser
 from pytorch3d.transforms import (euler_angles_to_matrix,
@@ -86,9 +86,19 @@ def test_make_batch():
     assert len(mats) == 5
     return mats
 
-def test_sort_batch(test_make_batch):
+def test_split_seq_train_test(test_make_batch):
     mats = test_make_batch
     seq_lengths = [mat.shape[0] for mat in mats]
     sorted_mats = sorted(mats, key=lambda x: x.shape[0], reverse=True)
     assert sorted_mats[0].shape[0] == np.max(seq_lengths) # maximum
     assert sorted_mats[-1].shape[0] == np.min(seq_lengths) # minimum
+    
+    x, y = split_seq_train_test(sorted_mats)
+    assert sorted(seq_lengths, reverse=True) == [916, 854, 788, 758, 748]
+    assert x[0].size() == (915, 147)
+    assert torch.all(x[0][914] == y[0][913]).item() == True
+    assert x[1].size() == (853, 147)
+    assert torch.all(x[1][852] == y[1][851]).item() == True
+    assert x[-1].size() == (747, 147)
+    assert torch.all(x[-1][746] == y[-1][745]).item() == True
+    assert torch.all(x[-1][241] == y[-1][240]).item() == True

@@ -112,3 +112,11 @@ def make_seq_list(files):
         input_mat = torch.Tensor(input_mat)
         mats.append(input_mat)
     return mats
+
+def split_seq_train_test(sorted_mat: List):
+    x = []
+    y = []
+    for mat in sorted_mat:
+        x.append(mat[:-1,:])
+        y.append(mat[1:,:])
+    return x, y
