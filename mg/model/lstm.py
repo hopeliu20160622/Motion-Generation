@@ -3,14 +3,14 @@ from torch import nn
 
 class LSTMModel(nn.Module):
 
-    def __init__(self):
+    def __init__(self, input_dim, hidden_dim):
         super().__init__()
 
-        self.motion_embed = 63 + 84
-        self.lstm_size = 128
+        self.motion_embed = input_dim
+        self.lstm_size = hidden_dim
         self.encoder1 = nn.Linear(self.motion_embed, 256)
         self.prelu = nn.PReLU()
-        self.encoder2 = nn.Linear(256, 128)
+        self.encoder2 = nn.Linear(256, hidden_dim)
         self.lstm = nn.LSTM(
             input_size=self.lstm_size,
             hidden_size=self.lstm_size,
@@ -20,14 +20,14 @@ class LSTMModel(nn.Module):
         self.decoder1 = nn.Linear(256, self.motion_embed)
     
     def forward(self, x):
-        h0 = torch.randn((1,1,128))
-        c0 = torch.randn((1,1,128))
+        # h0 = torch.randn((1,1,self.lstm_size))
+        # c0 = torch.randn((1,1,self.lstm_size))
 
         embed = self.encoder1(x)
         embed = self.prelu(embed)
         embed = self.encoder2(embed)
 
-        output, _state = self.lstm(embed, (h0, c0))
+        output, _state = self.lstm(embed)
 
         out = self.decoder2(output)
         out = self.prelu(out)
