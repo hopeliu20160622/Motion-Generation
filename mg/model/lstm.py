@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 class LSTMModel(nn.Module):
 
@@ -18,18 +19,37 @@ class LSTMModel(nn.Module):
         )
         self.decoder2 = nn.Linear(self.lstm_size, 256)
         self.decoder1 = nn.Linear(256, self.motion_embed)
+        self.l1_loss = nn.L1Loss()
     
-    def forward(self, x):
-        # h0 = torch.randn((1,1,self.lstm_size))
+    def forward(self, x, x_lengths):
+        # h0 = torch.randn((1,1,self.lstm_size)) # Add init hidden here!!
         # c0 = torch.randn((1,1,self.lstm_size))
 
-        embed = self.encoder1(x)
-        embed = self.prelu(embed)
-        embed = self.encoder2(embed)
+        batch_size, seq_len, _ = x.size()
 
-        output, _state = self.lstm(embed)
+        x = self.encoder1(x)
+        x = self.prelu(x)
+        x = self.encoder2(x)
 
-        out = self.decoder2(output)
+        x = pack_padded_sequence(x, x_lengths, batch_first=True)
+
+        out, _state = self.lstm(x)
+
+        out, pack_seq = pad_packed_sequence(out, batch_first=True)
+        
+        out = self.decoder2(out)
         out = self.prelu(out)
         out = self.decoder1(out)
         return out
+
+    def loss(self, preds, targets, x_lengths):
+        # TODO: doc Why calculate loss conditioned on lengths. It will prevent preferring short seq
+        total_loss = 0
+        for batch_id, length in enumerate(x_lengths):
+            loss_single = self.l1_loss(preds[batch_id, :length,:], targets[batch_id, :length, :])
+            total_loss += loss_single
+        mean_loss = total_loss / len(x_lengths)
+        return mean_loss
+
+    def init_hidden(self):
+        pass

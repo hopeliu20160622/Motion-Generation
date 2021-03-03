@@ -1,5 +1,5 @@
 from mg.model.lstm import LSTMModel
-from mg.data.util import make_seq_list
+from mg.data.util import make_seq_list, split_seq_train_test
 from torch.nn.utils.rnn import pad_sequence
 import torch
 import numpy as np
@@ -10,36 +10,35 @@ def test_model_train():
     files = ['npz_data/quaternion/F01A0V1.npz', 'npz_data/quaternion/M11SU0V1.npz', 'npz_data/quaternion/M11SU4V1.npz',
               'npz_data/quaternion/M11H2V1.npz', 'npz_data/quaternion/M11D3V1.npz']
     mats = make_seq_list(files)
+    x_seq_lengths = sorted([mat.shape[0] - 1 for mat in mats], reverse=True)
     sorted_mats = sorted(mats, key=lambda x: x.shape[0], reverse=True) # sort by seq length, descending order
-    input_mat = pad_sequence(sorted_mats, batch_first=True) 
     
-    X = input_mat[:, :-1, :]
-    Y = input_mat[:, 1:, :]
+    x, y = split_seq_train_test(sorted_mats)
+    x_padded = pad_sequence(x, batch_first=True)
+    y_padded = pad_sequence(y, batch_first=True)
 
-    input_dim = X.shape[2]
+    x_padded = x_padded[:,:,:3] #XYZ ONLY
+    y_padded = y_padded[:,:,:3] #XYZ ONLY
+
+    input_dim = x_padded.shape[2]
     hidden_dim = 128
+
     model = LSTMModel(input_dim, hidden_dim)
-    loss_function = nn.L1Loss()
     optimizer = optim.Adam(params=model.parameters())
+
     # test output w/o training
-    num_epochs = 10
+    num_epochs = 5
     loss_hist = []
     for _ in range(num_epochs):
         optimizer.zero_grad()
-        output = model(X)
-        pred = output
-        target = Y
+        output = model(x_padded, x_seq_lengths) # double check s_seq_lengths valied
+        pred = output[:,:,:3] #XYZ ONLY
+        target = y_padded[:,:,:3] #XYZ ONLY
         assert pred.shape == target.shape
-        loss = loss_function(pred, target)
+        loss = model.loss(pred, target, x_seq_lengths)
         loss.backward()
         optimizer.step()
         loss_hist.append(loss.item())
     assert loss_hist[0] > loss_hist[-1]
 
-
-    
-
-
-
-## Test Train batch
 ## Visualize 3d xyz test (test purpose)
