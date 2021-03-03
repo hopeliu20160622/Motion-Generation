@@ -1,10 +1,12 @@
 import os
-
-import pandas as pd
-from sklearn.model_selection import train_test_split
 from typing import List
-from pytorch3d.transforms import euler_angles_to_matrix, matrix_to_quaternion, matrix_to_rotation_6d
+
+import numpy as np
+import pandas as pd
 import torch
+from pytorch3d.transforms import (euler_angles_to_matrix, matrix_to_quaternion,
+                                  matrix_to_rotation_6d)
+from sklearn.model_selection import train_test_split
 
 joi = [
     "Hips",
@@ -100,3 +102,13 @@ def find_maximum_frame_length(files):
         if file_len > max_len:
             max_len = file_len
     return max_len
+
+def make_seq_list(files):
+    """Converts from file paths to list of tensors (seq X embedding)"""
+    mats = []
+    for fn in files:
+        mat = np.load(fn)
+        input_mat =np.concatenate([mat['pos'], mat['rot']], axis=1)
+        input_mat = torch.Tensor(input_mat)
+        mats.append(input_mat)
+    return mats
