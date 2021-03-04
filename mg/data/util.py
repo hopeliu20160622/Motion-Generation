@@ -125,7 +125,7 @@ def split_seq_X_y(sorted_mat: List):
 def convert_bvh_path_to_npz(files, bvh_dir="npz_data/quaternion"):
     npz_path = []
     for file in files:
-        file_name = os.path.basename(os.path.splitext(file)[0])
+        file_name = os.path.splitext(os.path.basename(file))[0]
         npz_name = file_name + ".npz"
         npz_path.append(os.path.join(bvh_dir, npz_name))
     return npz_path

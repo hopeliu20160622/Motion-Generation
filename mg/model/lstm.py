@@ -24,8 +24,8 @@ class LSTMModel(nn.Module):
         self.l1_loss = nn.L1Loss()
     
     def forward(self, x, x_lengths):
-        h0 = torch.randn(self.num_layers,self.batch_size,self.lstm_size)
-        c0 = torch.randn(self.num_layers,self.batch_size,self.lstm_size)
+        h0 = torch.randn(self.num_layers,x.shape[0],self.lstm_size)
+        c0 = torch.randn(self.num_layers,x.shape[0],self.lstm_size)
 
         x = self.encoder1(x)
         x = self.prelu(x)
