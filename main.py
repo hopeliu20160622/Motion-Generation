@@ -8,15 +8,16 @@ from torch import nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 def train():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     train_files, test_files = extract_train_test_path(meta_file='data/emotion-mocap/file-info.csv', filename='filename', target='emotion', test_size=0.1)
-    test_npz = convert_bvh_path_to_npz(test_files)
-    X_padded, y_padded, seq_lengths = make_padded_batch(test_npz[:13])
+    npz = convert_bvh_path_to_npz(train_files)
+    X_padded, y_padded, seq_lengths = make_padded_batch(npz)
 
     dataset = MotionDataset(X_padded, y_padded, seq_lengths)
-    batch_size = 10
+    batch_size = 64
     loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
 
     input_dim = 3
@@ -43,6 +44,11 @@ def train():
             pbar.set_postfix({'loss': loss.item()})
     
     print("Training Complete.")
+    plt.plot(loss_hist)
+    plt.xlabel("Epochs")
+    plt.ylabel("Loss")
+    plt.show()
+    plt.savefig('loss_graph.png')
     save_path = "saved_weights"
     torch.save(model.state_dict(), save_path)
 
