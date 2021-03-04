@@ -4,7 +4,7 @@ from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 class LSTMModel(nn.Module):
 
-    def __init__(self, input_dim, hidden_dim, batch_size):
+    def __init__(self, input_dim, hidden_dim, batch_size, device):
         super().__init__()
 
         self.motion_embed = input_dim
@@ -22,10 +22,11 @@ class LSTMModel(nn.Module):
         self.decoder2 = nn.Linear(self.lstm_size, 256)
         self.decoder1 = nn.Linear(256, self.motion_embed)
         self.l1_loss = nn.L1Loss()
+        self.device = device
     
     def forward(self, x, x_lengths):
-        h0 = torch.randn(self.num_layers,x.shape[0],self.lstm_size)
-        c0 = torch.randn(self.num_layers,x.shape[0],self.lstm_size)
+        h0 = torch.randn(self.num_layers,x.shape[0],self.lstm_size).to(self.device)
+        c0 = torch.randn(self.num_layers,x.shape[0],self.lstm_size).to(self.device)
 
         x = self.encoder1(x)
         x = self.prelu(x)

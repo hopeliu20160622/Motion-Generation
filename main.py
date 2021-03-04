@@ -21,7 +21,7 @@ def train():
 
     input_dim = 3
     hidden_dim = 128
-    model = LSTMModel(input_dim, hidden_dim, batch_size=batch_size)
+    model = LSTMModel(input_dim, hidden_dim, batch_size=batch_size, device=device)
     model.to(device)
     optimizer = optim.Adam(params=model.parameters())
 
