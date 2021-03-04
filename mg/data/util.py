@@ -133,7 +133,7 @@ def convert_bvh_path_to_npz(files, bvh_dir="npz_data/quaternion"):
 def make_padded_batch(files):
     """convert from files to padded X, y batch. Notice taht order is sorted by length"""
     seq_list = make_seq_list(files)
-    seq_lengths = sorted([seq.shape[0] - 1 for seq in seq_list], reverse=True)
+    seq_lengths = sorted([seq.shape[0] - 1 for seq in seq_list], reverse=True) # TODO: BUG. It will be problematic if there are multiple files with same seq lengths.
     seq_sorted = sorted(seq_list, key=lambda x: x.shape[0], reverse=True) # sort by seq length, descending order
 
     X, y = split_seq_X_y(seq_sorted)

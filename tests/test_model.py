@@ -17,7 +17,7 @@ def test_model_train():
     input_dim = x_padded.shape[2]
     hidden_dim = 128
 
-    model = LSTMModel(input_dim, hidden_dim, batch_size=len(files))
+    model = LSTMModel(input_dim, hidden_dim, batch_size=len(files), device='cpu')
     optimizer = optim.Adam(params=model.parameters())
 
     # test output w/o training

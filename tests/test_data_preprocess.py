@@ -56,7 +56,7 @@ def test_euler_to_matrix():
 
 def test_preprocess_bvh_quaternion(ext_train_test_files):
     _, test_files = ext_train_test_files[0], ext_train_test_files[1]
-    preprocessor = Preprocessor(test_files[0], rot_format='quaternion')
+    preprocessor = Preprocessor(test_files[1], rot_format='quaternion')
     pos_mat, rot_mat = preprocessor.process()
     assert pos_mat.shape[0] == rot_mat.shape[0]
     assert pos_mat.shape[1]/3 == rot_mat.shape[1]/4

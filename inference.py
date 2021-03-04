@@ -15,28 +15,25 @@ def inference():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     _, test_files = extract_train_test_path(meta_file='data/emotion-mocap/file-info.csv', filename='filename', target='emotion', test_size=0.1)
     npz = convert_bvh_path_to_npz(test_files)
-    X_padded, y_padded, seq_lengths = make_padded_batch(npz)
+    pos = np.load(npz[50])['pos']
     batch_size = 64
 
-    X_padded = X_padded[:,:,:3]
-    y_padded = y_padded[:,:,:3]
+    X_padded = torch.Tensor(pos[np.newaxis,:,:])
+    for_viz = X_padded[0].numpy()
 
-
-    input_dim = 3
+    input_dim = 63
     hidden_dim = 128
     model = LSTMModel(input_dim, hidden_dim, batch_size=batch_size, device=device)
-    model.load_state_dict(torch.load('saved_weights/position_only/weights_150', map_location=device))
+    model.load_state_dict(torch.load('saved_weights/position_only/saved_weights_100', map_location=device))
     model.eval()
     model.to(device)
     
     # Sequential generation, last 30 frames continue
-    motion_id = 1
-    input_frames = 40
+    input_frames = 100
     generate_frames = 100
 
     generated_collated = []
-    input_frames = X_padded[motion_id:motion_id+1,:input_frames,:]
-    frames = input_frames
+    frames = X_padded[:,:input_frames,:]
     for _ in range(generate_frames):
         pred = model(frames, [input_frames])
         seen = frames[0][1:] #39 X 3
@@ -46,6 +43,8 @@ def inference():
     generated_collated = torch.unsqueeze(torch.cat(generated_collated), 0)
 
     # visualize
+    original_frames = X_padded[0].numpy()
+    print(original_frames)
 
 if __name__ == '__main__':
     inference()

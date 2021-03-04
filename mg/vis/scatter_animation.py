@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.animation as animation
 
 
-def animate_scatters(iteration, data, scatters):
+def animate_scatters(frame, data, scatters):
     """
     Update the data held by the scatter plot and therefore animates it.
 
@@ -17,34 +17,38 @@ def animate_scatters(iteration, data, scatters):
         list: List of scatters (One per element) with new coordinates
     """
     for i in range(data[0].shape[0]):
-        scatters[i]._offsets3d = (data[iteration][0:1], data[iteration][1:2], data[iteration][2:])
+        scatters[i]._offsets3d = (data[frame][i,0:1], data[frame][i,1:2], data[frame][i,2:])
     return scatters
 
-def scatter_animation(arr, file_name):
 
+def scatter_animation(array, file_name):
+    # Attaching 3D axis to the figure
     fig = plt.figure()
     ax = Axes3D(fig)
 
-    # create the parametric curve
-    x=arr[:,0]
-    y=arr[:,1]
-    z=arr[:,2]
+    # Initialize scatters
+    init_frame = array[0]
+    init_coord = init_frame.reshape(-1, 3)
+    scatters = [ax.scatter([x], [y], [z]) for x, y, z in init_coord]
 
-    # create the first plot
-    point, = ax.plot([x[0]], [y[0]], [z[0]], 'o')
-    ax.legend()
-    # ax.set_xlim([-1.5, 1.5])
-    # ax.set_ylim([-1.5, 1.5])
-    # ax.set_zlim([-1.5, 1.5])
+    # Number of iterations
+    iterations = array.shape[0]
 
-    # second option - move the point position at every frame
-    def update_point(n, x, y, z, point):
-        point.set_data(np.array([x[n], y[n]]))
-        point.set_3d_properties(z[n], 'z')
-        return point
+    # Setting the axes properties
+    ax.set_xlabel('X')
+    ax.set_xlim(-60,50)
+    ax.set_ylabel('Y')
+    ax.set_ylim(-50,100)
+    ax.set_zlabel('Z')
+    ax.set_zlim(-100,100)
 
-    ani=animation.FuncAnimation(fig, update_point, 50, fargs=(x, y, z, point))
+    ax.set_title('Frame')
 
+    # Provide starting angle for the view.
+    ax.view_init(110, -90)
+
+    ani = animation.FuncAnimation(fig, animate_scatters, frames=iterations, fargs=(array.reshape(array.shape[0],-1,3), scatters),
+                                    interval=100)
     Writer = animation.writers['ffmpeg']
-    writer = Writer(fps=30, bitrate=900, extra_args=['-vcodec', 'libx264'])
+    writer = Writer(fps=30, bitrate=200, extra_args=['-vcodec', 'libx264'])
     ani.save(file_name, writer=writer)
