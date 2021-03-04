@@ -49,7 +49,7 @@ def train():
     plt.ylabel("Loss")
     plt.show()
     plt.savefig('loss_graph.png')
-    save_path = "saved_weights"
+    save_path = f"saved_weights+{num_epochs}"
     torch.save(model.state_dict(), save_path)
 
 if __name__ == "__main__":
