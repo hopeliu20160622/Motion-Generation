@@ -7,6 +7,7 @@ import torch
 from pytorch3d.transforms import (euler_angles_to_matrix, matrix_to_quaternion,
                                   matrix_to_rotation_6d)
 from sklearn.model_selection import train_test_split
+from torch.nn.utils.rnn import pad_sequence
 
 joi = [
     "Hips",
@@ -113,10 +114,30 @@ def make_seq_list(files):
         mats.append(input_mat)
     return mats
 
-def split_seq_train_test(sorted_mat: List):
+def split_seq_X_y(sorted_mat: List):
     x = []
     y = []
     for mat in sorted_mat:
         x.append(mat[:-1,:])
         y.append(mat[1:,:])
     return x, y
+
+def convert_bvh_path_to_npz(files, bvh_dir="npz_data/quaternion"):
+    npz_path = []
+    for file in files:
+        file_name = os.path.basename(os.path.splitext(file)[0])
+        npz_name = file_name + ".npz"
+        npz_path.append(os.path.join(bvh_dir, npz_name))
+    return npz_path
+
+def make_padded_batch(files):
+    """convert from files to padded X, y batch. Notice taht order is sorted by length"""
+    seq_list = make_seq_list(files)
+    seq_lengths = sorted([seq.shape[0] - 1 for seq in seq_list], reverse=True)
+    seq_sorted = sorted(seq_list, key=lambda x: x.shape[0], reverse=True) # sort by seq length, descending order
+
+    X, y = split_seq_X_y(seq_sorted)
+    X_padded = pad_sequence(X, batch_first=True)
+    y_padded = pad_sequence(y, batch_first=True)
+
+    return X_padded, y_padded, seq_lengths
