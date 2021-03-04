@@ -11,7 +11,7 @@ def test_model_train():
               'npz_data/quaternion/M11H2V1.npz', 'npz_data/quaternion/M11D3V1.npz']
     X_padded, y_padded, seq_lengths = make_padded_batch(files)
 
-    x_padded = X_padded[:,:,:3] #XYZ ONLY
+    x_padded = X_padded[:,:,:3] #XYZ ONLY # THIS IS WRONG IT ONLY COUNTS ROOT POS
     y_padded = y_padded[:,:,:3] #XYZ ONLY
 
     input_dim = x_padded.shape[2]

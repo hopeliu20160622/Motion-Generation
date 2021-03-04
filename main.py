@@ -20,7 +20,7 @@ def train():
     batch_size = 64
     loader = DataLoader(dataset, batch_size=batch_size, shuffle=False)
 
-    input_dim = 3
+    input_dim = 63 # HARD CODING
     hidden_dim = 128
     model = LSTMModel(input_dim, hidden_dim, batch_size=batch_size, device=device)
     model.to(device)
@@ -33,15 +33,15 @@ def train():
     for epoch in pbar:
         for x_padded, y_padded, seq_lengths in loader:
             optimizer.zero_grad()
-            x_padded = x_padded[:,:,:3].to(device)
+            x_padded = x_padded[:,:,:63].to(device)
             output = model(x_padded, seq_lengths) # double check s_seq_lengths valied
-            pred = output[:,:,:3] #XYZ ONLY
-            target = y_padded[:,:,:3].to(device) #XYZ ONLY
+            pred = output[:,:,:63] #XYZ ONLY
+            target = y_padded[:,:,:63].to(device) #XYZ ONLY
             loss = model.loss(pred, target, seq_lengths)
             loss.backward()
             optimizer.step()
-            loss_hist.append(loss.item())
             pbar.set_postfix({'loss': loss.item()})
+        loss_hist.append(loss.item())
     
     print("Training Complete.")
     plt.plot(loss_hist)
