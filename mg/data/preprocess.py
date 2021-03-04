@@ -4,6 +4,7 @@ from typing import List
 from pymo.parsers import BVHParser
 from mg.data.util import joi, joi_to_colnames, euler_to_quaternion, euler_to_6d
 import numpy as np
+from torch.utils.data import Dataset
 
 # Need to be processed by length X 1 X embeddings
 # Which corresponds to total_frames X 1 X embeddings
@@ -39,3 +40,19 @@ class Preprocessor:
             rot_convert.append(values)
         rot_matrix = np.concatenate(rot_convert, axis=1)
         return bvh_df[pos_cols].values, rot_matrix
+
+
+class MotionDataset(Dataset):
+
+    def __init__(self, X_padded, y_padded, seq_lengths):
+        self.X_padded = X_padded
+        self.y_padded = y_padded
+        self.seq_lengths = seq_lengths
+
+    def __len__(self):
+        assert self.X_padded.shape[0] == self.y_padded.shape[0]
+        return self.X_padded.shape[0]
+
+    def __getitem__(self, index):
+        return self.X_padded[index], self.y_padded[index], self.seq_lengths[index]
+    

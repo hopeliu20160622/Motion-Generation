@@ -27,17 +27,13 @@ class LSTMModel(nn.Module):
         h0 = torch.randn(self.num_layers,self.batch_size,self.lstm_size)
         c0 = torch.randn(self.num_layers,self.batch_size,self.lstm_size)
 
-        batch_size, seq_len, _ = x.size()
-
         x = self.encoder1(x)
         x = self.prelu(x)
         x = self.encoder2(x)
 
         x = pack_padded_sequence(x, x_lengths, batch_first=True)
-
-        out, (hn, cn) = self.lstm(x, (h0, c0))
-
-        out, pack_seq = pad_packed_sequence(out, batch_first=True)
+        out, _ = self.lstm(x, (h0, c0))
+        out, _ = pad_packed_sequence(out, batch_first=True)
         
         out = self.decoder2(out)
         out = self.prelu(out)

@@ -4,13 +4,16 @@ import numpy as np
 import pandas as pd
 import pytest
 import torch
-from mg.data.preprocess import Preprocessor
-from mg.data.util import (extract_train_test_path, find_maximum_frame_length, make_seq_list, split_seq_train_test,
-                          get_frame_length, joi, joi_to_colnames)
+from mg.data.preprocess import MotionDataset, Preprocessor
+from mg.data.util import (convert_bvh_path_to_npz, extract_train_test_path,
+                          find_maximum_frame_length, get_frame_length, joi,
+                          joi_to_colnames, make_padded_batch, make_seq_list,
+                          split_seq_X_y)
 from pymo.parsers import BVHParser
 from pytorch3d.transforms import (euler_angles_to_matrix,
                                   matrix_to_euler_angles, matrix_to_quaternion,
                                   matrix_to_rotation_6d)
+from torch.utils.data import DataLoader
 
 
 @pytest.fixture
@@ -93,7 +96,7 @@ def test_split_seq_train_test(test_make_batch):
     assert sorted_mats[0].shape[0] == np.max(seq_lengths) # maximum
     assert sorted_mats[-1].shape[0] == np.min(seq_lengths) # minimum
     
-    x, y = split_seq_train_test(sorted_mats)
+    x, y = split_seq_X_y(sorted_mats)
     assert sorted(seq_lengths, reverse=True) == [916, 854, 788, 758, 748]
     assert x[0].size() == (915, 147)
     assert torch.all(x[0][914] == y[0][913]).item() == True
@@ -102,3 +105,21 @@ def test_split_seq_train_test(test_make_batch):
     assert x[-1].size() == (747, 147)
     assert torch.all(x[-1][746] == y[-1][745]).item() == True
     assert torch.all(x[-1][241] == y[-1][240]).item() == True
+
+@pytest.fixture
+def test_make_padded_batch(ext_train_test_files):
+    _, test_files = ext_train_test_files[0], ext_train_test_files[1]
+    test_files_npz = convert_bvh_path_to_npz(test_files)
+    X_padded, y_padded, seq_lengths = make_padded_batch(test_files_npz)
+    assert X_padded.shape[0] == y_padded.shape[0]
+    assert X_padded.shape[1] == y_padded.shape[1] == seq_lengths[0]
+    return X_padded, y_padded, seq_lengths
+
+def test_data_loader(test_make_padded_batch):
+    X_padded, y_padded, seq_lengths = test_make_padded_batch
+    dataset = MotionDataset(X_padded, y_padded, seq_lengths)
+    loader = DataLoader(dataset, batch_size=5)
+    data_count = 0
+    for batch in loader:
+        data_count += batch[0].shape[0]
+    assert data_count == X_padded.shape[0]
