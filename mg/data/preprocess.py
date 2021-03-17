@@ -2,9 +2,10 @@ from typing import List
 
 
 from pymo.parsers import BVHParser
-from mg.data.util import joi, joi_to_colnames, euler_to_quaternion, euler_to_6d
+from mg.data.util import joi, joi_to_colnames, euler_to_quaternion, euler_to_6d, convert_angle_representation
 import numpy as np
 from torch.utils.data import Dataset
+
 
 # Need to be processed by length X 1 X embeddings
 # Which corresponds to total_frames X 1 X embeddings
@@ -12,6 +13,31 @@ from torch.utils.data import Dataset
 # rotation:
 #   * refer: https://www.mathworks.com/help/robotics/ref/eul2rotm.html
 #   * refer: https://pytorch3d.readthedocs.io/en/latest/modules/transforms.html#pytorch3d.transforms.euler_angles_to_matrix
+
+class BVHProcessor:
+    """Parse BVH file and provide useful transform needed for motion generation"""
+    def __init__(self, file_name: str):    
+        self.file_name = file_name
+        self._parsed = BVHParser().parse(file_name)
+        self.motion = self._parsed.values
+
+    def make_state_input_angle_by_frame_id(self, frame_id: int, angle_representation: str):
+        """Query motion by given frame id and prepare input vector
+        Args:
+            frame_id (int): frame_id
+            angle_representation (str): angle representation in vector form. Supports ['6d', 'quarternion']
+        """
+        rot_cols = [rot_col for rot_col in self.motion.columns.tolist() if 'rotation' in rot_col] # use rotation values only
+        motion_sr = self.motion.iloc[frame_id][rot_cols]
+        motion_values = motion_sr.values
+        new_col_names, converted_vector = convert_angle_representation(rot_cols, motion_values, angle_representation)
+        return new_col_names, converted_vector
+
+    def make_offset_input_by_frame_id(self):
+        pass
+
+    def make_target_input_by_frame_id(self):
+        pass
 
 
 class Preprocessor:

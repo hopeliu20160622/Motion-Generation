@@ -8,6 +8,67 @@ from pytorch3d.transforms import (euler_angles_to_matrix, matrix_to_quaternion,
                                   matrix_to_rotation_6d)
 from sklearn.model_selection import train_test_split
 from torch.nn.utils.rnn import pad_sequence
+from pytorch3d.transforms import euler_angles_to_matrix, matrix_to_quaternion, matrix_to_rotation_6d
+
+
+def convert_angle_representation(col_names: List, motion_values: np.array, angle_representation: str):
+    """Convert given motion to desired angle representation.
+
+    # NOW, IT SIMPLY ASSUME MOTION VALUES ARE ORDERED AS ZYX rotation order.
+    Args:
+        col_names (List): channel names (e.g. ['Hips_Xposition', ..., 'RihtThumb_Yrotation', 'RightThumb_Xrotation'])
+        motion_values (np.array): motion values correspond to col_names
+        angle_representation (str): target angle representation. Supports ['6d', 'quaternion']
+
+    Returns:
+        (col_name, motion_vector) (tuple): converted column name and motion vector array
+    """
+    # TODO: should support various euler order, using skeleton structure might be better.
+    # TODO: Too lengthy. Break this function into several subroutines.
+
+    new_col = []
+    converted_angle = []
+    for idx in range(0, motion_values.shape[0], 3):
+        joint_name = col_names[idx].split('_')[0]
+        joint_col = col_names[idx: idx + 3]
+        joint_euler = motion_values[idx: idx + 3]
+
+        base = torch.zeros((3,3))
+        base[0][0] = joint_euler[2] # Xrotation
+        base[1][1] = joint_euler[1] # Yrotation
+        base[2][2] = joint_euler[0] # Zrotation
+        base = torch.deg2rad(base)  # Convert from degree to radian since PyMO returns with degree
+
+        x_rot = euler_angles_to_matrix(base[0], convention='XYZ')
+        y_rot = euler_angles_to_matrix(base[1], convention='XYZ')
+        z_rot = euler_angles_to_matrix(base[2], convention='XYZ')
+
+        rot_mat = torch.eye(3)
+        channel_order = 'ZYX'
+        for axis in channel_order:
+            if axis == 'X' :
+                rot_mat = torch.matmul(rot_mat, x_rot)
+            elif axis == 'Y':
+                rot_mat = torch.matmul(rot_mat, y_rot)
+            elif axis == 'Z' :
+                rot_mat = torch.matmul(rot_mat, z_rot)
+            else:
+                raise ValueError(f'Wrong channel order given (Capital Only): {channel_order}')
+
+        if angle_representation == 'quaternion':
+            new_col_name = [joint_name + '_' + i for i in 'rijk']
+            converted = matrix_to_quaternion(rot_mat).numpy()
+        elif angle_representation == '6d':
+            new_col_name = [joint_name + '_' + i for i in ['6d_0', '6d_1', '6d_2', '6d_3', '6d_4', '6d_5']]
+            converted = matrix_to_rotation_6d(rot_mat).numpy()
+        else:
+            raise ValueError("Undefined angle representation format")
+        
+        new_col.extend(new_col_name)
+        converted_angle.append(converted)
+    
+    return (new_col, np.concatenate(converted_angle))
+
 
 joi = [
     "Hips",

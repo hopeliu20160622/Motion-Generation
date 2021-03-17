@@ -8,18 +8,37 @@ from mg.data.preprocess import MotionDataset, Preprocessor
 from mg.data.util import (convert_bvh_path_to_npz, extract_train_test_path,
                           find_maximum_frame_length, get_frame_length, joi,
                           joi_to_colnames, make_padded_batch, make_seq_list,
-                          split_seq_X_y)
+                          split_seq_X_y, convert_angle_representation)
 from pymo.parsers import BVHParser
 from pytorch3d.transforms import (euler_angles_to_matrix,
                                   matrix_to_euler_angles, matrix_to_quaternion,
                                   matrix_to_rotation_6d)
 from torch.utils.data import DataLoader
-
+from mg.data.preprocess import BVHProcessor
 
 @pytest.fixture
 def ext_train_test_files():
     train_files, test_files = extract_train_test_path(meta_file='data/emotion-mocap/file-info.csv', filename='filename', target='emotion', test_size=0.1)
     return train_files, test_files
+
+
+def test_convert_angle_representation():
+    cmu_path = 'data/cmu-mocap/data/001/01_01.bvh'
+    bvh_processor = BVHProcessor(cmu_path)
+    motion_joint_num = (bvh_processor.motion.shape[1] - 3) / 3
+
+    new_col_names_0, converted_vector_0 = bvh_processor.make_state_input_angle_by_frame_id(frame_id=0, angle_representation='quaternion')
+    
+    assert len(new_col_names_0) / 4 == motion_joint_num
+    assert converted_vector_0.shape[0] / 4 == motion_joint_num
+
+    new_col_names_1, converted_vector_1 = bvh_processor.make_state_input_angle_by_frame_id(frame_id=1, angle_representation='quaternion')
+    assert len(new_col_names_1) / 4 == motion_joint_num
+    assert converted_vector_1.shape[0] / 4 == motion_joint_num
+
+    new_col_names_6d, converted_vector_6d = bvh_processor.make_state_input_angle_by_frame_id(frame_id=20, angle_representation='6d')
+    assert len(new_col_names_6d) / 6 == motion_joint_num
+    assert converted_vector_6d.shape[0] / 6 == motion_joint_num
 
 
 def test_train_test_split(ext_train_test_files):
