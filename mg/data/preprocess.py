@@ -33,6 +33,19 @@ class BVHProcessor:
         new_col_names, converted_vector = convert_angle_representation(rot_cols, motion_values, angle_representation)
         return new_col_names, converted_vector
 
+    def make_state_input_root_v_by_frame_id(self, frame_id: int):
+        motion_sr = self.motion.iloc[frame_id]
+        motion_pos = motion_sr.values[:3]
+
+        if frame_id == 0:
+            prev_pos = motion_pos
+        else:
+            prev_pos = self.motion.iloc[frame_id - 1].values[:3]
+        
+        root_vel = motion_pos - prev_pos
+        return root_vel
+
+
     def make_offset_input_by_frame_id(self):
         pass
 

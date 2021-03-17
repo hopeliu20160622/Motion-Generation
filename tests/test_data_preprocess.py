@@ -40,6 +40,22 @@ def test_convert_angle_representation():
     assert len(new_col_names_6d) / 6 == motion_joint_num
     assert converted_vector_6d.shape[0] / 6 == motion_joint_num
 
+def test_root_velocity():
+    cmu_path = 'data/cmu-mocap/data/001/01_01.bvh'
+    bvh_processor = BVHProcessor(cmu_path)
+    
+    root_v = bvh_processor.make_state_input_root_v_by_frame_id(0)
+    assert root_v.shape[0] == 3
+    np.testing.assert_array_equal(root_v, np.array([0,0,0]))
+
+    root_v_2 = bvh_processor.make_state_input_root_v_by_frame_id(2)
+    true_root_v_2 = bvh_processor.motion.iloc[2].values[:3] - bvh_processor.motion.iloc[1].values[:3] 
+    np.testing.assert_array_equal(root_v_2, true_root_v_2)
+
+    root_v_40 = bvh_processor.make_state_input_root_v_by_frame_id(40)
+    true_root_v_40 = bvh_processor.motion.iloc[40].values[:3] - bvh_processor.motion.iloc[39].values[:3] 
+    np.testing.assert_array_equal(root_v_40, true_root_v_40)
+    
 
 def test_train_test_split(ext_train_test_files):
     train_files = ext_train_test_files[0]
