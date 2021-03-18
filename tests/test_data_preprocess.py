@@ -64,6 +64,12 @@ def test_pos_angle_offset():
     assert np.all(offset_pos_10_10 == 0)
     assert np.all(offset_quat_10_10 == 0)
     
+def test_target_angle():
+    cmu_path = 'data/cmu-mocap/data/001/01_01.bvh'
+    bvh_processor = BVHProcessor(cmu_path)
+    
+    target_angle_10 = bvh_processor.make_target_input_by_frame_id(10, 'quaternion')
+    assert target_angle_10.shape[0] / 4 == 31
 
 
 @pytest.fixture

@@ -60,9 +60,9 @@ class BVHProcessor:
         
         return (offset_pos, offset_angle)
 
-    def make_target_input_by_frame_id(self, frame_id: int):
-
-        pass
+    def make_target_input_by_frame_id(self, target_frame_id: int, angle_representation):
+        target_angle = self.make_state_input_angle_by_frame_id(target_frame_id, angle_representation)
+        return target_angle[1]
 
 
 class Preprocessor:
