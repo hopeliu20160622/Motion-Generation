@@ -46,10 +46,22 @@ class BVHProcessor:
         return root_vel
 
 
-    def make_offset_input_by_frame_id(self):
-        pass
+    def make_offset_input_by_frame_id(self, frame_id: int, target_frame_id: int, angle_representation: str):
+        motion_target = self.motion.iloc[target_frame_id]
+        target_root_pos = motion_target.values[:3] # target xyz
+        target_angle = self.make_state_input_angle_by_frame_id(target_frame_id, angle_representation)
 
-    def make_target_input_by_frame_id(self):
+        cur_motion = self.motion.iloc[frame_id]
+        cur_motion_pos = cur_motion.values[:3] # current xyz
+        cur_angle = self.make_state_input_angle_by_frame_id(frame_id, angle_representation)
+
+        offset_pos = target_root_pos - cur_motion_pos
+        offset_angle = target_angle[1] - cur_angle[1]
+        
+        return (offset_pos, offset_angle)
+
+    def make_target_input_by_frame_id(self, frame_id: int):
+
         pass
 
 

@@ -16,10 +16,6 @@ from pytorch3d.transforms import (euler_angles_to_matrix,
 from torch.utils.data import DataLoader
 from mg.data.preprocess import BVHProcessor
 
-@pytest.fixture
-def ext_train_test_files():
-    train_files, test_files = extract_train_test_path(meta_file='data/emotion-mocap/file-info.csv', filename='filename', target='emotion', test_size=0.1)
-    return train_files, test_files
 
 
 def test_convert_angle_representation():
@@ -55,7 +51,26 @@ def test_root_velocity():
     root_v_40 = bvh_processor.make_state_input_root_v_by_frame_id(40)
     true_root_v_40 = bvh_processor.motion.iloc[40].values[:3] - bvh_processor.motion.iloc[39].values[:3] 
     np.testing.assert_array_equal(root_v_40, true_root_v_40)
+
+def test_pos_angle_offset():
+    cmu_path = 'data/cmu-mocap/data/001/01_01.bvh'
+    bvh_processor = BVHProcessor(cmu_path)
     
+    offset_pos_10_0, _ = bvh_processor.make_offset_input_by_frame_id(0, 10, 'quaternion')
+    offset_pos_10_8, _ = bvh_processor.make_offset_input_by_frame_id(8, 10, 'quaternion')
+
+    assert np.all(offset_pos_10_8 > offset_pos_10_0)
+    offset_pos_10_10, offset_quat_10_10 = bvh_processor.make_offset_input_by_frame_id(10, 10, 'quaternion')
+    assert np.all(offset_pos_10_10 == 0)
+    assert np.all(offset_quat_10_10 == 0)
+    
+
+
+@pytest.fixture
+def ext_train_test_files():
+    train_files, test_files = extract_train_test_path(meta_file='data/emotion-mocap/file-info.csv', filename='filename', target='emotion', test_size=0.1)
+    return train_files, test_files
+
 
 def test_train_test_split(ext_train_test_files):
     train_files = ext_train_test_files[0]
